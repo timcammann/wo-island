@@ -4,6 +4,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.object.reaction.ReactionEmoji;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -12,6 +13,12 @@ import java.util.Optional;
 
 @Service
 public class TestEventListener implements EventListener<MessageCreateEvent> {
+    private final List<String> islandChannelIds;
+
+    public TestEventListener(@Value("#{${events.test.channel-ids}}") final List<String> islandChannelIds) {
+        this.islandChannelIds = islandChannelIds;
+    }
+
 
     @Override
     public Class<MessageCreateEvent> getEventType() {
@@ -28,10 +35,9 @@ public class TestEventListener implements EventListener<MessageCreateEvent> {
     }
 
     private boolean isInTestChannel(final Message message){
-        List<String> channelIdWhitelist = List.of("1151975172815999047");
         MessageChannel messageChannel = message.getChannel().block();
         return Optional.ofNullable(messageChannel)
-                .map(channel -> listContains(channelIdWhitelist, channel.getId().asString()))
+                .map(channel -> listContains(islandChannelIds, channel.getId().asString()))
                 .orElse(false);
     }
 

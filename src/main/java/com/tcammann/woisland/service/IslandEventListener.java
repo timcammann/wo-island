@@ -4,6 +4,8 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.object.reaction.ReactionEmoji;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -13,6 +15,7 @@ import java.util.Optional;
 
 @Service
 public class IslandEventListener implements EventListener<MessageCreateEvent> {
+    private final static Logger LOG = LoggerFactory.getLogger(IslandEventListener.class);
     private final String islandEmojiCodepoints;
     private final List<String> islandChannelIds;
     private final List<String> islandKeywords;
@@ -24,6 +27,7 @@ public class IslandEventListener implements EventListener<MessageCreateEvent> {
         this.islandEmojiCodepoints = islandEmojiCodepoints;
         this.islandChannelIds = islandChannelIds;
         this.islandKeywords = islandKeywords;
+        LOG.info("Starting island event listener in channels {} and for keywords {}.", islandChannelIds, islandKeywords);
     }
 
     @Override

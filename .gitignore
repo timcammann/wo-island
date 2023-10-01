@@ -26,3 +26,6 @@ replay_pid*
 
 # IDE
 .idea/
+
+# Properties
+src/main/resources/application-local.properties

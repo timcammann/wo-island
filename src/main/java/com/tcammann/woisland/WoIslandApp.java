@@ -9,5 +9,4 @@ public class WoIslandApp {
 	public static void main(String[] args) {
 		SpringApplication.run(WoIslandApp.class, args);
 	}
-
 }
