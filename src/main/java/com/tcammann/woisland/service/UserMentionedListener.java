@@ -14,15 +14,15 @@ import java.util.List;
 @Service
 public class UserMentionedListener implements EventListener<MessageCreateEvent> {
     private final static Logger LOG = LoggerFactory.getLogger(UserMentionedListener.class);
-    private final String userMentionedEmojiCodepoints;
-    private final List<String> userNamesToReactTo;
+    private final String reactionEmojiCodepoints;
+    private final List<String> usernamesToReactTo;
 
     public UserMentionedListener(
-            @Value("${events.user-mentioned.emoji.codepoints}") final String userMentionedEmojiCodepoints,
-            @Value("#{${events.user-mentioned.user-names}}") final List<String> userNamesToReactTo) {
-        this.userMentionedEmojiCodepoints = userMentionedEmojiCodepoints;
-        this.userNamesToReactTo = userNamesToReactTo;
-        LOG.info("Starting user mention event listener for user names {}.", userNamesToReactTo);
+            @Value("${events.user-mentioned.emoji.codepoints}") final String reactionEmojiCodepoints,
+            @Value("#{${events.user-mentioned.user-names}}") final List<String> usernamesToReactTo) {
+        this.reactionEmojiCodepoints = reactionEmojiCodepoints;
+        this.usernamesToReactTo = usernamesToReactTo;
+        LOG.info("Starting user mention event listener for user names {}.", usernamesToReactTo);
     }
 
     @Override
@@ -34,13 +34,13 @@ public class UserMentionedListener implements EventListener<MessageCreateEvent> 
     public Mono<Void> execute(final MessageCreateEvent event) {
         return Mono.just(event.getMessage())
                 .filter(this::userMentioned)
-                .flatMap(message -> message.addReaction(ReactionEmoji.codepoints(userMentionedEmojiCodepoints)))
+                .flatMap(message -> message.addReaction(ReactionEmoji.codepoints(reactionEmojiCodepoints)))
                 .then();
     }
 
     private boolean userMentioned(final Message message){
-        return userNamesToReactTo.stream()
-                .anyMatch(keyword -> message.getUserMentions().stream()
-                        .anyMatch(user -> user.getUsername().equals(keyword)));
+        return usernamesToReactTo.stream()
+                .anyMatch(username -> message.getUserMentions().stream()
+                        .anyMatch(user -> user.getUsername().equals(username)));
     }
 }

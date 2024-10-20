@@ -30,6 +30,15 @@ events.user-mentioned.emoji.codepoints=insert-code-points
 events.user-mentioned.user-names={"user-name1, user-name2"}
 ```
 
+### User posted image
+Let the bot react to an image posted by specified users in specified channels with:
+```
+events.user-posted-image.emoji.id=123456
+events.user-posted-image.emoji.name=example-name
+events.user-posted-image.user-names={"example-user-name", "example-user-name-2"}
+events.user-posted-image.channel-ids={"456789", "567890"}
+```
+
 ## Build
 Run to build and containerize the app via jib maven plugin.
 ``` 
