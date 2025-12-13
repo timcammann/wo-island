@@ -51,7 +51,7 @@ Alternatively you can use `.mvnw` and/or provide login credentials by cli parame
 ./mvnw jib:build -Djib.image.path=imagePath/imageName:tag -Djib.to.auth.username=***** -Djib.to.auth.password=*****
 ```
 
-## Run
+## Run 
 Run the resulting image in a container environment of your choosing. Don't forget to mount the environment variable for the api token if you have not set it via application properties.
 
 ## Contact

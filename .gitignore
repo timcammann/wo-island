@@ -29,3 +29,6 @@ replay_pid*
 
 # Properties
 src/main/resources/application-local.properties
+
+# DB
+database
