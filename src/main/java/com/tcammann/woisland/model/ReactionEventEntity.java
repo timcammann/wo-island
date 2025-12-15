@@ -1,59 +1,65 @@
 package com.tcammann.woisland.model;
 
-import discord4j.core.event.domain.message.ReactionAddEvent;
-import discord4j.core.object.entity.Message;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.util.Date;
-import java.util.NoSuchElementException;
 
 @Entity
 public class ReactionEventEntity {
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String serverId;
-    private String to;
-    private String by;
-    private String emoji;
-    private Date date;
-
-    public ReactionEventEntity(String serverId, String to, String by, String emoji) {
-        this.serverId = serverId;
-        this.to = to;
-        this.by = by;
-        this.emoji = emoji;
-        this.date = new Date();
-    }
+    private Long server;
+    private Long toUser;
+    private Long byUser;
+    private int emojiHash;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date timestamp;
 
     public ReactionEventEntity() {
+    }
 
+    public ReactionEventEntity(Long server, Long toUser, Long byUser, int emojiHash) {
+        this.server = server;
+        this.toUser = toUser;
+        this.byUser = byUser;
+        this.emojiHash = emojiHash;
+        this.timestamp = new Date();
     }
 
     public Long getId() {
         return id;
     }
 
-    public String getServerId() {
-        return serverId;
+    public Long getServer() {
+        return server;
     }
 
-    public String getTo() {
-        return to;
+    public Long getToUser() {
+        return toUser;
     }
 
-    public String getBy() {
-        return by;
+    public Long getByUser() {
+        return byUser;
     }
 
-    public Date getDate() {
-        return date;
+    public int getEmojiHash() {
+        return emojiHash;
     }
 
-    public String getEmoji() {
-        return emoji;
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    @Override
+    public String toString() {
+        return "ReactionEventEntity{" +
+                "id=" + id +
+                ", server=" + server +
+                ", toUser=" + toUser +
+                ", byUser=" + byUser +
+                ", emojiHash=" + emojiHash +
+                ", timestamp=" + timestamp +
+                '}';
     }
 }

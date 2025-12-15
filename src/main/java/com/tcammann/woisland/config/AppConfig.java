@@ -1,6 +1,7 @@
 package com.tcammann.woisland.config;
 
 import com.tcammann.woisland.service.EventListener;
+import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import org.springframework.beans.factory.annotation.Value;
