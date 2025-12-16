@@ -5,30 +5,27 @@ import com.tcammann.woisland.repository.ReactionEventRepository;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.message.ReactionAddEvent;
 import discord4j.core.object.entity.Member;
-import discord4j.core.object.entity.Message;
-import discord4j.core.object.entity.User;
 import discord4j.core.object.reaction.ReactionEmoji;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.security.InvalidKeyException;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
 
 @Service
 public class ReactionEventListener implements EventListener<ReactionAddEvent> {
 
     private final ReactionEventRepository reactionEventRepository;
-    private final List<Integer> trackedEmojis;
+    private final Integer trackedEmoji;
 
     public ReactionEventListener(
             ReactionEventRepository reactionEventRepository,
-            @Value("#{${events.reaction.tracked-emojis}}") final List<Integer> trackedEmojis) {
+            @Value("#{${events.reaction.ranking.tracked-emoji}}") final Integer trackedEmoji) {
         this.reactionEventRepository = reactionEventRepository;
-        this.trackedEmojis = trackedEmojis;
+        this.trackedEmoji = trackedEmoji;
     }
 
     @Override
@@ -36,7 +33,7 @@ public class ReactionEventListener implements EventListener<ReactionAddEvent> {
         return ReactionAddEvent.class;
     }
 
-    // TODO: Track ReactionRemoveEvents as well
+    // TODO: Track ReactionRemoveEvents as well, or otherwise don't allow duplicate reactions
     @Override
     public Mono<Void> execute(ReactionAddEvent event) {
         LOG.debug("Received reaction event with emoji {} by user {}.",
@@ -50,7 +47,7 @@ public class ReactionEventListener implements EventListener<ReactionAddEvent> {
     }
 
     private boolean isTrackedReaction(ReactionAddEvent event) {
-        return event.getEmoji().asUnicodeEmoji().map(ReactionEmoji.Unicode::hashCode).map(trackedEmojis::contains).orElse(false);
+        return event.getEmoji().asUnicodeEmoji().map(ReactionEmoji.Unicode::hashCode).map(trackedEmoji::equals).orElse(false);
     }
 
     public Mono<ReactionEventEntity> toEntity(ReactionAddEvent event) throws NoSuchElementException {
