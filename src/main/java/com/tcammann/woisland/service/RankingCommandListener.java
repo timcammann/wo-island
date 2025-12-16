@@ -16,14 +16,14 @@ import reactor.core.scheduler.Schedulers;
 import java.util.List;
 
 @Service
-public class ReactionRankingCommandListener implements EventListener<ChatInputInteractionEvent> {
+public class RankingCommandListener implements Listener<ChatInputInteractionEvent> {
 
     private final ReactionEventRepository reactionEventRepository;
     private final String commandName;
     private final Integer pageSize;
     private final GatewayDiscordClient gatewayDiscordClient;
 
-    public ReactionRankingCommandListener(
+    public RankingCommandListener(
             ReactionEventRepository reactionEventRepository,
             @Value("${events.reaction.ranking.command-name}") String commandName,
             @Value("${events.reaction.ranking.page-size}") Integer pageSize,

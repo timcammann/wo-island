@@ -9,11 +9,11 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface ReactionEventRepository extends JpaRepository<ReactionEventEntity, Long> {
 
-    @Query("select new com.tcammann.woisland.model.Ranking(t.toUser, count(t.toUser)) " +
+    @Query("select new com.tcammann.woisland.model.Ranking(t.messageAuthor, count(t.messageAuthor)) " +
             "from ReactionEventEntity t where " +
             "t.server = :server " +
-            "group by t.toUser " +
-            "order by count(t.toUser)")
+            "group by t.messageAuthor " +
+            "order by count(t.messageAuthor)")
     Page<Ranking> findTopXByServer(Long server, Pageable pageable);
 
 }

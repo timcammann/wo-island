@@ -2,28 +2,25 @@ package com.tcammann.woisland.service;
 
 import com.tcammann.woisland.model.ReactionEventEntity;
 import com.tcammann.woisland.repository.ReactionEventRepository;
-import discord4j.common.util.Snowflake;
+import com.tcammann.woisland.util.ReactionUtils;
 import discord4j.core.event.domain.message.ReactionAddEvent;
-import discord4j.core.object.entity.Member;
-import discord4j.core.object.reaction.ReactionEmoji;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.security.InvalidKeyException;
-import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 @Service
-public class ReactionEventListener implements EventListener<ReactionAddEvent> {
+public class ReactionListener implements Listener<ReactionAddEvent> {
 
     private final ReactionEventRepository reactionEventRepository;
-    private final Integer trackedEmoji;
+    private final Long trackedEmoji;
 
-    public ReactionEventListener(
+    public ReactionListener(
             ReactionEventRepository reactionEventRepository,
-            @Value("#{${events.reaction.ranking.tracked-emoji}}") final Integer trackedEmoji) {
+            @Value("${events.reaction.ranking.tracked-emoji}") final Long trackedEmoji) {
         this.reactionEventRepository = reactionEventRepository;
         this.trackedEmoji = trackedEmoji;
     }
@@ -36,31 +33,32 @@ public class ReactionEventListener implements EventListener<ReactionAddEvent> {
     // TODO: Track ReactionRemoveEvents as well, or otherwise don't allow duplicate reactions
     @Override
     public Mono<Void> execute(ReactionAddEvent event) {
-        LOG.debug("Received reaction event with emoji {} by user {}.",
-                event.getEmoji().asUnicodeEmoji().map(ReactionEmoji.Unicode::hashCode).orElseThrow(),
-                event.getMember().map(Member::getId).map(Snowflake::asLong).orElseThrow());
+        if(!isTrackedReaction(event)) {
+            LOG.debug("Discarding reaction event with emoji id/hash {}", ReactionUtils.readEmoji(event).orElse(null));
+            return Mono.empty();
+        }
+
         return Mono.just(event)
-                .filter(this::isTrackedReaction)
                 .flatMap(this::toEntity)
                 .flatMap(this::writeReactionEvent)
+                .map(ReactionEventEntity::getId)
+                .flatMap(this::readReactionEvent)
+                .doOnNext(entity -> LOG.debug("Reaction event saved with emoji id/hash {}", entity.getEmoji()))
                 .then();
     }
 
     private boolean isTrackedReaction(ReactionAddEvent event) {
-        return event.getEmoji().asUnicodeEmoji().map(ReactionEmoji.Unicode::hashCode).map(trackedEmoji::equals).orElse(false);
+        return Objects.equals(trackedEmoji, ReactionUtils.readEmoji(event).orElseThrow());
     }
 
     public Mono<ReactionEventEntity> toEntity(ReactionAddEvent event) throws NoSuchElementException {
-        var serverId = event.getGuildId().map(Snowflake::asLong).orElseThrow();
-        var reactionBy = event.getMember().map(Member::getId).map(Snowflake::asLong).orElseThrow();
-        var emoji = event.getEmoji().asUnicodeEmoji().map(ReactionEmoji.Unicode::hashCode).orElseThrow();
+        var serverId = ReactionUtils.readServer(event).orElseThrow();
+        var reactionBy = ReactionUtils.readMember(event).orElseThrow();
+        var emoji = ReactionUtils.readEmoji(event).orElseThrow();
 
         return event.getMessage()
                 .map(message -> message.getAuthor().orElseThrow().getId().asLong())
-                .map(reactionTo -> new ReactionEventEntity(serverId, reactionTo, reactionBy, emoji))
-                .flatMap(this::writeReactionEvent)
-                .map(ReactionEventEntity::getId)
-                .flatMap(this::readReactionEvent);
+                .map(reactionTo -> new ReactionEventEntity(serverId, reactionTo, reactionBy, emoji));
     }
 
     private Mono<ReactionEventEntity> writeReactionEvent(ReactionEventEntity reactionEventEntity) {

@@ -5,13 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
-public interface EventListener<T extends Event> {
-    Logger LOG = LoggerFactory.getLogger(EventListener.class);
+public interface Listener<T extends Event> {
+    Logger LOG = LoggerFactory.getLogger(Listener.class);
     Class<T> getEventType();
     Mono<Void> execute(T event);
 
-    default Mono<Void> handleError(Throwable error) {
+    default void handleError(Throwable error, Object event) {
         LOG.error("Unable to process {}", getEventType().getSimpleName(), error);
-        return Mono.empty();
     }
 }

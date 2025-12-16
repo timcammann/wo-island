@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @Service
-public class UserMentionedListener implements EventListener<MessageCreateEvent> {
+public class UserMentionedListener implements Listener<MessageCreateEvent> {
     private final static Logger LOG = LoggerFactory.getLogger(UserMentionedListener.class);
     private final String reactionEmojiCodepoints;
     private final List<String> usernamesToReactTo;

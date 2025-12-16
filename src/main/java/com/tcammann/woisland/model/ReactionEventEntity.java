@@ -10,20 +10,20 @@ public class ReactionEventEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Long server;
-    private Long toUser;
-    private Long byUser;
-    private int emojiHash;
+    private Long messageAuthor; // the user that posted the message
+    private Long member; // the user that reacted to the message
+    private Long emoji;
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
     public ReactionEventEntity() {
     }
 
-    public ReactionEventEntity(Long server, Long toUser, Long byUser, int emojiHash) {
+    public ReactionEventEntity(Long server, Long messageAuthor, Long member, Long emoji) {
         this.server = server;
-        this.toUser = toUser;
-        this.byUser = byUser;
-        this.emojiHash = emojiHash;
+        this.messageAuthor = messageAuthor;
+        this.member = member;
+        this.emoji = emoji;
         this.timestamp = new Date();
     }
 
@@ -35,16 +35,16 @@ public class ReactionEventEntity {
         return server;
     }
 
-    public Long getToUser() {
-        return toUser;
+    public Long getMessageAuthor() {
+        return messageAuthor;
     }
 
-    public Long getByUser() {
-        return byUser;
+    public Long getMember() {
+        return member;
     }
 
-    public int getEmojiHash() {
-        return emojiHash;
+    public Long getEmoji() {
+        return emoji;
     }
 
     public Date getTimestamp() {
@@ -56,9 +56,9 @@ public class ReactionEventEntity {
         return "ReactionEventEntity{" +
                 "id=" + id +
                 ", server=" + server +
-                ", toUser=" + toUser +
-                ", byUser=" + byUser +
-                ", emojiHash=" + emojiHash +
+                ", toUser=" + messageAuthor +
+                ", byUser=" + member +
+                ", emojiHash=" + emoji +
                 ", timestamp=" + timestamp +
                 '}';
     }

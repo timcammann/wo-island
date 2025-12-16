@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @Service
-public class UserPostedImageListener implements EventListener<MessageCreateEvent> {
+public class UserPostedImageListener implements Listener<MessageCreateEvent> {
     private final static Logger LOG = LoggerFactory.getLogger(UserPostedImageListener.class);
     public static final String CHARS_CONTAINED_IN_CONTENT_TYPE = "image";
     private final List<String> monitoredChannels;
