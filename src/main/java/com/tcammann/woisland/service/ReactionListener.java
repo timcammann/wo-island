@@ -9,20 +9,23 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Objects;
+import java.util.stream.Stream;
 
 @Service
 public class ReactionListener implements Listener<ReactionAddEvent> {
 
     private final ReactionEventRepository reactionEventRepository;
-    private final Long trackedEmoji;
+    private final List<String> trackedEmojis;
 
     public ReactionListener(
             ReactionEventRepository reactionEventRepository,
-            @Value("${events.reaction.ranking.tracked-emoji}") final Long trackedEmoji) {
+            @Value("#{${events.reaction.ranking.tracked-emojis.custom.names}}") final List<String> customEmojiNames,
+            @Value("#{${events.reaction.ranking.tracked-emojis.utf8.code-points}}") final List<String> utfEmojiCodePoints) {
         this.reactionEventRepository = reactionEventRepository;
-        this.trackedEmoji = trackedEmoji;
+        var customEmojiCodePoints = ReactionUtils.emojiNamesAsCodePoints(customEmojiNames);
+        this.trackedEmojis = Stream.concat(customEmojiCodePoints.stream(), utfEmojiCodePoints.stream()).toList();
     }
 
     @Override
@@ -33,8 +36,8 @@ public class ReactionListener implements Listener<ReactionAddEvent> {
     // TODO: Track ReactionRemoveEvents as well, or otherwise don't allow duplicate reactions
     @Override
     public Mono<Void> execute(ReactionAddEvent event) {
-        if(!isTrackedReaction(event)) {
-            LOG.debug("Discarding reaction event with emoji id/hash {}", ReactionUtils.readEmoji(event).orElse(null));
+        if (!isTrackedReaction(event)) {
+            LOG.debug("Discarding reaction event with emoji codepoint(s) {}", ReactionUtils.readEmoji(event).orElse(null));
             return Mono.empty();
         }
 
@@ -43,12 +46,12 @@ public class ReactionListener implements Listener<ReactionAddEvent> {
                 .flatMap(this::writeReactionEvent)
                 .map(ReactionEventEntity::getId)
                 .flatMap(this::readReactionEvent)
-                .doOnNext(entity -> LOG.debug("Reaction event saved with emoji id/hash {}", entity.getEmoji()))
+                .doOnNext(entity -> LOG.debug("Reaction event saved with emoji codepoint(s) {}", entity.getEmoji()))
                 .then();
     }
 
     private boolean isTrackedReaction(ReactionAddEvent event) {
-        return Objects.equals(trackedEmoji, ReactionUtils.readEmoji(event).orElseThrow());
+        return trackedEmojis.contains(ReactionUtils.readEmoji(event).orElseThrow());
     }
 
     public Mono<ReactionEventEntity> toEntity(ReactionAddEvent event) throws NoSuchElementException {
@@ -66,11 +69,11 @@ public class ReactionListener implements Listener<ReactionAddEvent> {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-        private Mono<ReactionEventEntity> readReactionEvent(Long id) {
-            return Mono.fromCallable(() -> reactionEventRepository.findById(id))
-                    .subscribeOn(Schedulers.boundedElastic())
-                    .flatMap(optional -> optional.map(Mono::just)
-                            .orElseGet(() -> Mono.error(new IllegalArgumentException("Failed to read reaction event (id: " + id + ")"))))
-                    .doOnNext(System.out::println);
-        }
+    private Mono<ReactionEventEntity> readReactionEvent(Long id) {
+        return Mono.fromCallable(() -> reactionEventRepository.findById(id))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(optional -> optional.map(Mono::just)
+                        .orElseGet(() -> Mono.error(new IllegalArgumentException("Failed to read reaction event (id: " + id + ")"))))
+                .doOnNext(System.out::println);
+    }
 }

@@ -20,16 +20,22 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
 
     private final ReactionEventRepository reactionEventRepository;
     private final String commandName;
+    private final String resultHeading;
+    private final String resultLineTemplate;
     private final Integer pageSize;
     private final GatewayDiscordClient gatewayDiscordClient;
 
     public RankingCommandListener(
             ReactionEventRepository reactionEventRepository,
             @Value("${events.reaction.ranking.command-name}") String commandName,
-            @Value("${events.reaction.ranking.page-size}") Integer pageSize,
+            @Value("${events.reaction.ranking.result.page-size}") Integer pageSize,
+            @Value("${events.reaction.ranking.result.heading}") String resultHeading,
+            @Value("${events.reaction.ranking.result.line-template}") String resultLineTemplate,
             GatewayDiscordClient gatewayDiscordClient) {
         this.reactionEventRepository = reactionEventRepository;
         this.commandName = commandName;
+        this.resultHeading = resultHeading;
+        this.resultLineTemplate = resultLineTemplate;
         this.pageSize = pageSize;
         this.gatewayDiscordClient = gatewayDiscordClient;
     }
@@ -73,8 +79,8 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
     }
 
     private String buildResponse(List<RankedMember> rankedMembers) {
-        var sb = new StringBuilder().append("Most petted:\n"); // TODO: Make configurable
-        var lineTemplate = "%s: %s with %s pets\n"; // TODO: Make configurable
+        var sb = new StringBuilder().append("%s\n".formatted(resultHeading));
+        var lineTemplate = "%s\n".formatted(resultLineTemplate);
         for (var rankedMember : rankedMembers) {
             sb.append(lineTemplate.formatted(rankedMember.ranking().getRank(), rankedMember.member().getDisplayName(), rankedMember.ranking().getCount()));
         }

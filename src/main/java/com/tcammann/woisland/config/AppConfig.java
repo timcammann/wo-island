@@ -13,7 +13,7 @@ public class AppConfig {
     public String clientToken(
             @Value("${discord.client.token.value}") final String applicationVariable,
             @Value("${discord.client.token.key.environment}") final String environmentVariableKey){
-        String environmentVariable = System.getenv(environmentVariableKey);
+        String environmentVariable = System.getenv(environmentVariableKey); // TODO: Unnecessary, refactor
         return environmentVariable != null ? environmentVariable : applicationVariable;
     }
 

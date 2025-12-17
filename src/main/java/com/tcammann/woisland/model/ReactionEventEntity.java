@@ -12,14 +12,14 @@ public class ReactionEventEntity {
     private Long server;
     private Long messageAuthor; // the user that posted the message
     private Long member; // the user that reacted to the message
-    private Long emoji;
+    private String emoji; // all emojis are stored as code points
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 
     public ReactionEventEntity() {
     }
 
-    public ReactionEventEntity(Long server, Long messageAuthor, Long member, Long emoji) {
+    public ReactionEventEntity(Long server, Long messageAuthor, Long member, String emoji) {
         this.server = server;
         this.messageAuthor = messageAuthor;
         this.member = member;
@@ -43,7 +43,7 @@ public class ReactionEventEntity {
         return member;
     }
 
-    public Long getEmoji() {
+    public String getEmoji() {
         return emoji;
     }
 
@@ -58,7 +58,7 @@ public class ReactionEventEntity {
                 ", server=" + server +
                 ", toUser=" + messageAuthor +
                 ", byUser=" + member +
-                ", emojiHash=" + emoji +
+                ", emojiCodePoints=" + emoji +
                 ", timestamp=" + timestamp +
                 '}';
     }
