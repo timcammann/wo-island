@@ -68,7 +68,7 @@ public class InitService<T extends Event> {
         // Replace with your guild ID
         gatewayDiscordClient.getRestClient().getApplicationService()
                 .createGuildApplicationCommand(applicationId, reactionRankingServerId, commandRequest)
-                .doOnSuccess(command -> LOG.info("Application command '{}' registered", command.name()))
+                .doOnSuccess(command -> LOG.info("Application command '{}' registered with server '{}'", command.name(), reactionRankingServerId))
                 .subscribe();
 
         // For global:

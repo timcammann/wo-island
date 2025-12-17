@@ -40,13 +40,18 @@ events.user-posted-image.channel-ids={"456789", "567890"}
 ```
 
 ## Build
-Run to build and containerize the app via jib maven plugin.
+Run to build and containerize the app via jib maven wrapper.
 ``` 
-mvn compile jib:build -Djib.image.path=imagePath/imageName:tag
+./mvnw jib:build -Djib.image.path=imagePath/imageName:tag
 ```
 `-Djib.image.path` specifies the location of your image registry and image name. To push to an external registry make sure to do a `docker login` beforehand.
 
-Alternatively you can use `.mvnw` and/or provide login credentials by cli parameter like this:
+Windows:
+``` powershell
+.\mvnw.cmd jib:build -Dimage=imagePath/imageName:tag
+```
+
+Alternatively you can provide login credentials by cli parameter like this:
 ```
 ./mvnw jib:build -Djib.image.path=imagePath/imageName:tag -Djib.to.auth.username=***** -Djib.to.auth.password=*****
 ```
