@@ -2,21 +2,20 @@ package com.tcammann.woisland.util;
 
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.message.ReactionAddEvent;
-import discord4j.core.object.entity.Member;
 
 import java.util.List;
 import java.util.Optional;
 
 public class ReactionUtils {
-    public static Optional<String> readEmoji(ReactionAddEvent event) {
+    public static Optional<String> readEmojiAsCodePoints(ReactionAddEvent event) {
         return event.getEmoji().asEmojiData().name().flatMap(ReactionUtils::asCodePoints);
     }
 
-    public static Optional<Long> readMember(ReactionAddEvent event) {
-        return event.getMember().map(Member::getId).map(Snowflake::asLong);
+    public static Long readMemberId(ReactionAddEvent event) {
+        return event.getUserId().asLong();
     }
 
-    public static Optional<Long> readServer(ReactionAddEvent event) {
+    public static Optional<Long> readServerId(ReactionAddEvent event) {
         return event.getGuildId().map(Snowflake::asLong);
     }
 

@@ -17,7 +17,6 @@ import java.util.List;
 
 @Service
 public class RankingCommandListener implements Listener<ChatInputInteractionEvent> {
-
     private final ReactionEventRepository reactionEventRepository;
     private final String commandName;
     private final String resultHeading;
@@ -38,6 +37,7 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
         this.resultLineTemplate = resultLineTemplate;
         this.pageSize = pageSize;
         this.gatewayDiscordClient = gatewayDiscordClient;
+        LOG.info("Starting {}.", this.getClass().getSimpleName());
     }
 
     @Override

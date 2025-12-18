@@ -2,8 +2,8 @@ package com.tcammann.woisland.service;
 
 import com.tcammann.woisland.util.MessageUtils;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.emoji.Emoji;
 import discord4j.core.object.entity.Message;
-import discord4j.core.object.reaction.ReactionEmoji;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +26,7 @@ public class IslandListener implements Listener<MessageCreateEvent> {
         this.reactionEmojiCodePoints = reactionEmojiCodePoints;
         this.islandChannelIds = islandChannelIds;
         this.islandKeywords = islandKeywords;
-        LOG.info("Starting island event listener in channels {} and for keywords {}.", islandChannelIds, islandKeywords);
+        LOG.info("Starting {} for channels {} and for keywords {}.", this.getClass().getSimpleName(), islandChannelIds, islandKeywords);
     }
 
     @Override
@@ -38,15 +38,15 @@ public class IslandListener implements Listener<MessageCreateEvent> {
     public Mono<Void> execute(final MessageCreateEvent event) {
         return Mono.just(event.getMessage())
                 .filter(this::isIslandMessage)
-                .flatMap(message -> message.addReaction(ReactionEmoji.codepoints(reactionEmojiCodePoints)))
+                .flatMap(message -> message.addReaction(Emoji.codepoints(reactionEmojiCodePoints)))
                 .then();
     }
 
-    private boolean isIslandMessage(final Message message){
+    private boolean isIslandMessage(final Message message) {
         return MessageUtils.isInChannel(message, islandChannelIds) && containsIslandKeyword(message);
     }
 
-    private boolean containsIslandKeyword(final Message message){
+    private boolean containsIslandKeyword(final Message message) {
         return islandKeywords.stream().anyMatch(keyword -> message.getContent().contains(keyword));
     }
 }

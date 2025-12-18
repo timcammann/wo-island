@@ -1,9 +1,9 @@
 package com.tcammann.woisland.model;
 
 public class Ranking {
+    private final Long user;
+    private final Long count;
     private int rank;
-    private Long user;
-    private Long count;
 
     public Ranking(Long user, Long count) {
         this.user = user;
@@ -29,9 +29,9 @@ public class Ranking {
     @Override
     public String toString() {
         return "ReactionCount{" +
-               "rank=" + rank +
-               ", user=" + user +
-               ", count=" + count +
-               '}';
+                "rank=" + rank +
+                ", user=" + user +
+                ", count=" + count +
+                '}';
     }
 }

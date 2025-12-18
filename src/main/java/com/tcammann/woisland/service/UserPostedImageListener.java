@@ -3,8 +3,8 @@ package com.tcammann.woisland.service;
 import com.tcammann.woisland.util.MessageUtils;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.emoji.Emoji;
 import discord4j.core.object.entity.Message;
-import discord4j.core.object.reaction.ReactionEmoji;
 import discord4j.discordjson.Id;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,11 +16,11 @@ import java.util.List;
 
 @Service
 public class UserPostedImageListener implements Listener<MessageCreateEvent> {
-    private final static Logger LOG = LoggerFactory.getLogger(UserPostedImageListener.class);
     public static final String CHARS_CONTAINED_IN_CONTENT_TYPE = "image";
+    private final static Logger LOG = LoggerFactory.getLogger(UserPostedImageListener.class);
     private final List<String> monitoredChannels;
     private final List<String> usernamesToReactTo;
-    private final ReactionEmoji reactionEmoji;
+    private final Emoji reactionEmoji;
 
 
     public UserPostedImageListener(
@@ -31,8 +31,8 @@ public class UserPostedImageListener implements Listener<MessageCreateEvent> {
     ) {
         this.usernamesToReactTo = usernamesToReactTo;
         this.monitoredChannels = monitoredChannels;
-        this.reactionEmoji = ReactionEmoji.custom(Snowflake.of(Id.of(reactionEmojiId)), reactionEmojiName, false);
-        LOG.info("Starting user posted image event listener for user names {}.", usernamesToReactTo);
+        this.reactionEmoji = Emoji.custom(Snowflake.of(Id.of(reactionEmojiId)), reactionEmojiName, false);
+        LOG.info("Starting {} for user names {}.", this.getClass().getSimpleName(), usernamesToReactTo);
     }
 
     @Override
@@ -56,8 +56,8 @@ public class UserPostedImageListener implements Listener<MessageCreateEvent> {
                 .anyMatch(attachment -> attachment.getContentType().get().contains(CHARS_CONTAINED_IN_CONTENT_TYPE));
     }
 
-    private boolean isUserToReactTo(final Message message){
-        if (message.getAuthor().isEmpty()){
+    private boolean isUserToReactTo(final Message message) {
+        if (message.getAuthor().isEmpty()) {
             return false;
         }
 

@@ -56,9 +56,9 @@ public class ReactionEventEntity {
         return "ReactionEventEntity{" +
                 "id=" + id +
                 ", server=" + server +
-                ", toUser=" + messageAuthor +
-                ", byUser=" + member +
-                ", emojiCodePoints=" + emoji +
+                ", messageAuthor=" + messageAuthor +
+                ", member=" + member +
+                ", emoji='" + emoji + '\'' +
                 ", timestamp=" + timestamp +
                 '}';
     }

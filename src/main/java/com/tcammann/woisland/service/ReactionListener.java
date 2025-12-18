@@ -26,6 +26,7 @@ public class ReactionListener implements Listener<ReactionAddEvent> {
         this.reactionEventRepository = reactionEventRepository;
         var customEmojiCodePoints = ReactionUtils.emojiNamesAsCodePoints(customEmojiNames);
         this.trackedEmojis = Stream.concat(customEmojiCodePoints.stream(), utfEmojiCodePoints.stream()).toList();
+        LOG.info("Starting {}.", this.getClass().getSimpleName());
     }
 
     @Override
@@ -33,35 +34,35 @@ public class ReactionListener implements Listener<ReactionAddEvent> {
         return ReactionAddEvent.class;
     }
 
-    // TODO: Track ReactionRemoveEvents as well, or otherwise don't allow duplicate reactions
     @Override
     public Mono<Void> execute(ReactionAddEvent event) {
         if (!isTrackedReaction(event)) {
-            LOG.debug("Discarding reaction event with emoji codepoint(s) {}", ReactionUtils.readEmoji(event).orElse(null));
+            LOG.trace("Discarding reaction event. Untracked emoji. Emoji codepoint(s): {}", ReactionUtils.readEmojiAsCodePoints(event).orElse(null));
+            return Mono.empty();
+        }
+        if (event.getMessageAuthorId().asLong() == ReactionUtils.readMemberId(event)) {
+            LOG.trace("Discarding reaction event. Reaction to user's own message. Emoji codepoint(s): {}", ReactionUtils.readEmojiAsCodePoints(event).orElse(null));
             return Mono.empty();
         }
 
-        return Mono.just(event)
-                .flatMap(this::toEntity)
-                .flatMap(this::writeReactionEvent)
+        return writeReactionEvent(toEntity(event))
                 .map(ReactionEventEntity::getId)
-                .flatMap(this::readReactionEvent)
+                .flatMap(this::fetchReactionEvent)
                 .doOnNext(entity -> LOG.debug("Reaction event saved with emoji codepoint(s) {}", entity.getEmoji()))
                 .then();
     }
 
     private boolean isTrackedReaction(ReactionAddEvent event) {
-        return trackedEmojis.contains(ReactionUtils.readEmoji(event).orElseThrow());
+        return trackedEmojis.contains(ReactionUtils.readEmojiAsCodePoints(event).orElseThrow());
     }
 
-    public Mono<ReactionEventEntity> toEntity(ReactionAddEvent event) throws NoSuchElementException {
-        var serverId = ReactionUtils.readServer(event).orElseThrow();
-        var reactionBy = ReactionUtils.readMember(event).orElseThrow();
-        var emoji = ReactionUtils.readEmoji(event).orElseThrow();
+    public ReactionEventEntity toEntity(ReactionAddEvent event) throws NoSuchElementException {
+        var server = ReactionUtils.readServerId(event).orElseThrow();
+        var messageAuthor = event.getMessageAuthorId().asLong();
+        var member = ReactionUtils.readMemberId(event);
+        var emoji = ReactionUtils.readEmojiAsCodePoints(event).orElseThrow();
 
-        return event.getMessage()
-                .map(message -> message.getAuthor().orElseThrow().getId().asLong())
-                .map(reactionTo -> new ReactionEventEntity(serverId, reactionTo, reactionBy, emoji));
+        return new ReactionEventEntity(server, messageAuthor, member, emoji);
     }
 
     private Mono<ReactionEventEntity> writeReactionEvent(ReactionEventEntity reactionEventEntity) {
@@ -69,11 +70,11 @@ public class ReactionListener implements Listener<ReactionAddEvent> {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    private Mono<ReactionEventEntity> readReactionEvent(Long id) {
+    private Mono<ReactionEventEntity> fetchReactionEvent(Long id) {
         return Mono.fromCallable(() -> reactionEventRepository.findById(id))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(optional -> optional.map(Mono::just)
                         .orElseGet(() -> Mono.error(new IllegalArgumentException("Failed to read reaction event (id: " + id + ")"))))
-                .doOnNext(System.out::println);
+                .doOnNext(entity -> LOG.trace("Fetched reaction event entity: {}", entity));
     }
 }
