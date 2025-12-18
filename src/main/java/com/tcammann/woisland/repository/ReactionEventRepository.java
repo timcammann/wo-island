@@ -13,7 +13,7 @@ public interface ReactionEventRepository extends JpaRepository<ReactionEventEnti
             "from ReactionEventEntity t where " +
             "t.server = :server " +
             "group by t.messageAuthor " +
-            "order by count(t.messageAuthor)")
+            "order by count(t.messageAuthor) desc")
     Page<Ranking> findTopXByServer(Long server, Pageable pageable);
 
 }

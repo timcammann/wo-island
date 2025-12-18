@@ -61,11 +61,11 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
 
     private Mono<List<Ranking>> fetchRankings(Long server) {
         return Mono.fromCallable(() -> {
-                    var list = reactionEventRepository.findTopXByServer(server, Pageable.ofSize(pageSize)).getContent();
-                    for (int i = 0; i < list.size(); i++) {
-                        list.get(i).setRank(i + 1);
+                    var rankings = reactionEventRepository.findTopXByServer(server, Pageable.ofSize(pageSize)).getContent();
+                    for (int i = 0; i < rankings.size(); i++) {
+                        rankings.get(i).setRank(i + 1);
                     }
-                    return list;
+                    return rankings;
                 })
                 .subscribeOn(Schedulers.boundedElastic());
     }
