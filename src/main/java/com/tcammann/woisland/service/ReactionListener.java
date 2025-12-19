@@ -58,11 +58,12 @@ public class ReactionListener implements Listener<ReactionAddEvent> {
 
     public ReactionEventEntity toEntity(ReactionAddEvent event) throws NoSuchElementException {
         var server = ReactionUtils.readServerId(event).orElseThrow();
+        var message = event.getMessageId().asLong();
         var messageAuthor = event.getMessageAuthorId().asLong();
         var member = ReactionUtils.readMemberId(event);
         var emoji = ReactionUtils.readEmojiAsCodePoints(event).orElseThrow();
 
-        return new ReactionEventEntity(server, messageAuthor, member, emoji);
+        return new ReactionEventEntity(server, message, messageAuthor, member, emoji);
     }
 
     private Mono<ReactionEventEntity> writeReactionEvent(ReactionEventEntity reactionEventEntity) {

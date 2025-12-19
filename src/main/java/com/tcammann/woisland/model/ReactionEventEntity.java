@@ -10,6 +10,7 @@ public class ReactionEventEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Long server;
+    private Long message;
     private Long messageAuthor; // the user that posted the message
     private Long member; // the user that reacted to the message
     private String emoji; // all emojis are stored as code points
@@ -19,8 +20,9 @@ public class ReactionEventEntity {
     public ReactionEventEntity() {
     }
 
-    public ReactionEventEntity(Long server, Long messageAuthor, Long member, String emoji) {
+    public ReactionEventEntity(Long server, Long message, Long messageAuthor, Long member, String emoji) {
         this.server = server;
+        this.message = message;
         this.messageAuthor = messageAuthor;
         this.member = member;
         this.emoji = emoji;
@@ -33,6 +35,10 @@ public class ReactionEventEntity {
 
     public Long getServer() {
         return server;
+    }
+
+    public Long getMessage() {
+        return message;
     }
 
     public Long getMessageAuthor() {
@@ -56,6 +62,7 @@ public class ReactionEventEntity {
         return "ReactionEventEntity{" +
                 "id=" + id +
                 ", server=" + server +
+                ", message=" + message +
                 ", messageAuthor=" + messageAuthor +
                 ", member=" + member +
                 ", emoji='" + emoji + '\'' +

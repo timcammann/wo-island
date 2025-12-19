@@ -3,6 +3,9 @@ package com.tcammann.woisland.service;
 
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.Event;
+import discord4j.core.object.command.ApplicationCommandOption;
+import discord4j.discordjson.json.ApplicationCommandOptionChoiceData;
+import discord4j.discordjson.json.ApplicationCommandOptionData;
 import discord4j.discordjson.json.ApplicationCommandRequest;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
@@ -15,6 +18,7 @@ import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 public class InitService<T extends Event> {
@@ -57,15 +61,18 @@ public class InitService<T extends Event> {
                 .subscribe();
 
         LOG.info("Registering application commands.");
+        var choices = Stream.of("year", "month", "day")
+                .map(name -> ApplicationCommandOptionChoiceData.builder().name(name).value(name).build()).toList();
         ApplicationCommandRequest commandRequest = ApplicationCommandRequest.builder()
                 .name(reactionRankingCommandName)
                 .description(reactionRankingCommandDescription)
-//                .addOption(ApplicationCommandOptionData.builder() // TODO: Timeframe support
-//                        .name("period")
-//                        .description("year, month or week")
-//                        .type(ApplicationCommandOption.Type.STRING.getValue())
-//                        .required(false)
-//                        .build())
+                .addOption(ApplicationCommandOptionData.builder()
+                        .name("timeframe")
+                        .description("the current 'year', 'month' (default) or 'day'")
+                        .choices(choices)
+                        .type(ApplicationCommandOption.Type.STRING.getValue())
+                        .required(false)
+                        .build())
                 .build();
 
         Flux.fromIterable(reactionRankingServerIds)
@@ -74,7 +81,8 @@ public class InitService<T extends Event> {
                         .doOnSuccess(command -> {
                             registeredCommands.add(new RegisteredCommand(serverId, command.id().asLong()));
                             LOG.info("Application command '{}' registered at server '{}'", command.name(), serverId);
-                        }))
+                        })
+                        .doOnError(error -> LOG.error("Failed to register application command {} at server '{}'", commandRequest.name(), serverId, error)))
                 .subscribe();
     }
 

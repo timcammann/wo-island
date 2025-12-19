@@ -2,6 +2,7 @@ package com.tcammann.woisland.service;
 
 import com.tcammann.woisland.model.RankedMember;
 import com.tcammann.woisland.model.Ranking;
+import com.tcammann.woisland.model.Timeframe;
 import com.tcammann.woisland.repository.ReactionEventRepository;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
@@ -13,6 +14,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -52,16 +56,36 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
             return Mono.empty();
         }
 
+        Date after;
+        try {
+            var timeframe = event.getOptionAsString("timeframe")
+                    .map( option -> Timeframe.valueOf(option.trim().toUpperCase()))
+                    .orElse(Timeframe.MONTH);
+            after = calculateTimestampCutoff(timeframe);
+        } catch (IllegalArgumentException e) {
+            return event.reply().withContent("Timeframe not supported.");
+        }
+
         var server = event.getInteraction().getGuildId().orElseThrow().asLong();
-        return fetchRankings(server)
+        return fetchRankings(server, after)
                 .flatMap(rankings -> fetchMembers(rankings, server))
                 .map(this::buildResponse)
                 .flatMap(response -> event.reply().withContent(response));
     }
 
-    private Mono<List<Ranking>> fetchRankings(Long server) {
+    private static Date calculateTimestampCutoff(Timeframe timeframe) {
+        LocalDate now = LocalDate.now();
+        LocalDate firstDayOfPeriod = switch (timeframe){
+            case DAY -> now;
+            case MONTH -> now.withDayOfMonth(1);
+            case YEAR -> now.withDayOfYear(1);
+        };
+        return Date.from(firstDayOfPeriod.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    private Mono<List<Ranking>> fetchRankings(Long server, Date after) {
         return Mono.fromCallable(() -> {
-                    var rankings = reactionEventRepository.findTopXByServer(server, Pageable.ofSize(pageSize)).getContent();
+                    var rankings = reactionEventRepository.findTopXByServer(server, after, Pageable.ofSize(pageSize)).getContent();
                     for (int i = 0; i < rankings.size(); i++) {
                         rankings.get(i).setRank(i + 1);
                     }
@@ -86,7 +110,6 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
         }
         return sb.toString();
     }
-
 }
 
 
