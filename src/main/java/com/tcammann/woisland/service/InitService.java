@@ -1,6 +1,7 @@
 package com.tcammann.woisland.service;
 
 
+import com.tcammann.woisland.model.TimeframeOption;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.Event;
 import discord4j.core.object.command.ApplicationCommandOption;
@@ -17,8 +18,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Service
 public class InitService<T extends Event> {
@@ -61,9 +62,12 @@ public class InitService<T extends Event> {
                 .subscribe();
 
         LOG.info("Registering application commands.");
-        var choices = Stream.of("year", "month", "day")
-                .map(name -> ApplicationCommandOptionChoiceData.builder().name(name).value(name).build()).toList();
-        ApplicationCommandRequest commandRequest = ApplicationCommandRequest.builder()
+        var choices = Arrays.stream(TimeframeOption.values())
+                .map(option -> ApplicationCommandOptionChoiceData.builder()
+                        .name(option.displayName)
+                        .value(option.name()).build())
+                .toList();
+        var commandRequest = ApplicationCommandRequest.builder()
                 .name(reactionRankingCommandName)
                 .description(reactionRankingCommandDescription)
                 .addOption(ApplicationCommandOptionData.builder()

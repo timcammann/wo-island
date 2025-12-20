@@ -2,7 +2,7 @@ package com.tcammann.woisland.service;
 
 import com.tcammann.woisland.model.RankedMember;
 import com.tcammann.woisland.model.Ranking;
-import com.tcammann.woisland.model.Timeframe;
+import com.tcammann.woisland.model.TimeframeOption;
 import com.tcammann.woisland.repository.ReactionEventRepository;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class RankingCommandListener implements Listener<ChatInputInteractionEvent> {
@@ -56,12 +57,12 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
             return Mono.empty();
         }
 
-        Timeframe timeframe;
+        TimeframeOption timeframe;
         Date after;
         try {
             timeframe = event.getOptionAsString("timeframe")
-                    .map( option -> Timeframe.valueOf(option.trim().toUpperCase()))
-                    .orElse(Timeframe.MONTH);
+                    .map( option -> TimeframeOption.valueOf(option.trim().toUpperCase()))
+                    .orElse(TimeframeOption.THIS_MONTH);
             after = calculateTimestampCutoff(timeframe);
         } catch (IllegalArgumentException e) {
             return event.reply().withContent("Timeframe not supported.");
@@ -74,17 +75,18 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
                 .flatMap(response -> event.reply().withContent(response));
     }
 
-    private static Date calculateTimestampCutoff(Timeframe timeframe) {
+    private static Date calculateTimestampCutoff(TimeframeOption timeframe) {
         LocalDate now = LocalDate.now();
         LocalDate firstDayOfPeriod = switch (timeframe){
-            case DAY -> now;
-            case MONTH -> now.withDayOfMonth(1);
-            case YEAR -> now.withDayOfYear(1);
+            case TODAY -> now;
+            case THIS_MONTH -> now.withDayOfMonth(1);
+            case THIS_YEAR -> now.withDayOfYear(1);
         };
         return Date.from(firstDayOfPeriod.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
     }
 
     private Mono<List<Ranking>> fetchRankings(Long server, Date after) {
+        var before = System.nanoTime();
         return Mono.fromCallable(() -> {
                     var rankings = reactionEventRepository.findTopXByServer(server, after, Pageable.ofSize(pageSize)).getContent();
                     for (int i = 0; i < rankings.size(); i++) {
@@ -92,6 +94,7 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
                     }
                     return rankings;
                 })
+                .doOnSuccess(t -> LOG.trace("Fetched rankings from database in {}ms", TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - before)))
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
@@ -103,8 +106,8 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
                 .collectList();
     }
 
-    private String buildReply(List<RankedMember> rankedMembers, Timeframe timeframe) {
-        var heading = (headingTemplate + "\n").formatted(timeframe.currently);
+    private String buildReply(List<RankedMember> rankedMembers, TimeframeOption timeframe) {
+        var heading = (headingTemplate + "\n").formatted(timeframe.text);
         var lineTemplate = resultLineTemplate + "\n";
 
         var sb = new StringBuilder().append(heading);

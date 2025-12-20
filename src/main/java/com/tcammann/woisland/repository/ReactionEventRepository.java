@@ -11,12 +11,12 @@ import java.util.Date;
 
 public interface ReactionEventRepository extends JpaRepository<ReactionEventEntity, Long> {
 
-    @Query("select new com.tcammann.woisland.model.Ranking(t.messageAuthor, count(t.messageAuthor)) " +
-            "from ReactionEventEntity t " +
-            "where t.server = :server " +
-            "and t.timestamp > :after " +
-            "group by t.messageAuthor " +
-            "order by count(t.messageAuthor) desc")
+    @Query("select new com.tcammann.woisland.model.Ranking(r.messageAuthor, count(r.messageAuthor)) " +
+            "from ReactionEventEntity r " +
+            "where r.server = :server " +
+            "and r.timestamp > :after " +
+            "group by r.messageAuthor " +
+            "order by count(r.messageAuthor) desc")
     Page<Ranking> findTopXByServer(Long server, Date after, Pageable pageable);
 
 }

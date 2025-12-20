@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
+@Table(indexes = @Index(name = "fetch-top-x", columnList = "server, timestamp"))
 public class ReactionEventEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
