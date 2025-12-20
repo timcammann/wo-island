@@ -23,7 +23,7 @@ import java.util.List;
 public class RankingCommandListener implements Listener<ChatInputInteractionEvent> {
     private final ReactionEventRepository reactionEventRepository;
     private final String commandName;
-    private final String resultHeading;
+    private final String headingTemplate;
     private final String resultLineTemplate;
     private final Integer pageSize;
     private final GatewayDiscordClient gatewayDiscordClient;
@@ -32,12 +32,12 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
             ReactionEventRepository reactionEventRepository,
             @Value("${events.reaction.ranking.command-name}") String commandName,
             @Value("${events.reaction.ranking.result.page-size}") Integer pageSize,
-            @Value("${events.reaction.ranking.result.heading}") String resultHeading,
+            @Value("${events.reaction.ranking.result.heading}") String headingTemplate,
             @Value("${events.reaction.ranking.result.line-template}") String resultLineTemplate,
             GatewayDiscordClient gatewayDiscordClient) {
         this.reactionEventRepository = reactionEventRepository;
         this.commandName = commandName;
-        this.resultHeading = resultHeading;
+        this.headingTemplate = headingTemplate;
         this.resultLineTemplate = resultLineTemplate;
         this.pageSize = pageSize;
         this.gatewayDiscordClient = gatewayDiscordClient;
@@ -56,9 +56,10 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
             return Mono.empty();
         }
 
+        Timeframe timeframe;
         Date after;
         try {
-            var timeframe = event.getOptionAsString("timeframe")
+            timeframe = event.getOptionAsString("timeframe")
                     .map( option -> Timeframe.valueOf(option.trim().toUpperCase()))
                     .orElse(Timeframe.MONTH);
             after = calculateTimestampCutoff(timeframe);
@@ -69,7 +70,7 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
         var server = event.getInteraction().getGuildId().orElseThrow().asLong();
         return fetchRankings(server, after)
                 .flatMap(rankings -> fetchMembers(rankings, server))
-                .map(this::buildResponse)
+                .map(rankings -> buildReply(rankings, timeframe))
                 .flatMap(response -> event.reply().withContent(response));
     }
 
@@ -102,11 +103,17 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
                 .collectList();
     }
 
-    private String buildResponse(List<RankedMember> rankedMembers) {
-        var sb = new StringBuilder().append("%s\n".formatted(resultHeading));
-        var lineTemplate = "%s\n".formatted(resultLineTemplate);
-        for (var rankedMember : rankedMembers) {
-            sb.append(lineTemplate.formatted(rankedMember.ranking().getRank(), rankedMember.member().getDisplayName(), rankedMember.ranking().getCount()));
+    private String buildReply(List<RankedMember> rankedMembers, Timeframe timeframe) {
+        var heading = (headingTemplate + "\n").formatted(timeframe.currently);
+        var lineTemplate = resultLineTemplate + "\n";
+
+        var sb = new StringBuilder().append(heading);
+        if (rankedMembers.isEmpty()){
+            sb.append("nobody :'(\n");
+        } else {
+            for (var rankedMember : rankedMembers) {
+                sb.append(lineTemplate.formatted(rankedMember.ranking().getRank(), rankedMember.member().getDisplayName(), rankedMember.ranking().getCount()));
+            }
         }
         return sb.toString();
     }
