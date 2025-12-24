@@ -1,4 +1,4 @@
-package com.tcammann.woisland.model;
+package com.tcammann.woisland.feature.ranking.model;
 
 import discord4j.core.object.entity.Member;
 

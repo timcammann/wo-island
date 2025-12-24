@@ -1,4 +1,4 @@
-package com.tcammann.woisland.service;
+package com.tcammann.woisland.feature;
 
 import discord4j.core.event.domain.Event;
 import org.slf4j.Logger;

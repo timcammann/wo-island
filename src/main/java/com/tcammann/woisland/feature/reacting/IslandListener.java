@@ -1,5 +1,6 @@
-package com.tcammann.woisland.service;
+package com.tcammann.woisland.feature.reacting;
 
+import com.tcammann.woisland.feature.Listener;
 import com.tcammann.woisland.util.MessageUtils;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.emoji.Emoji;
@@ -26,7 +27,7 @@ public class IslandListener implements Listener<MessageCreateEvent> {
         this.reactionEmojiCodePoints = reactionEmojiCodePoints;
         this.islandChannelIds = islandChannelIds;
         this.islandKeywords = islandKeywords;
-        LOG.info("Starting {} for channels {} and for keywords {}.", this.getClass().getSimpleName(), islandChannelIds, islandKeywords);
+        LOG.info("Initializing {} for channels {} and for keywords {}.", this.getClass().getSimpleName(), islandChannelIds, islandKeywords);
     }
 
     @Override

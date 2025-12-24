@@ -1,4 +1,4 @@
-package com.tcammann.woisland.model;
+package com.tcammann.woisland.feature.ranking.model;
 
 public class Ranking {
     private final Long user;
@@ -29,9 +29,9 @@ public class Ranking {
     @Override
     public String toString() {
         return "ReactionCount{" +
-                "rank=" + rank +
-                ", user=" + user +
-                ", count=" + count +
-                '}';
+               "rank=" + rank +
+               ", user=" + user +
+               ", count=" + count +
+               '}';
     }
 }

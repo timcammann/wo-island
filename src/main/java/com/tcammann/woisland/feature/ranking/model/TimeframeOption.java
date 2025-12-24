@@ -1,12 +1,12 @@
-package com.tcammann.woisland.model;
+package com.tcammann.woisland.feature.ranking.model;
 
 public enum TimeframeOption {
-    TODAY("today","today"),
+    TODAY("today", "today"),
     THIS_MONTH("this-month", "this month"),
-    THIS_YEAR ("this-year", "this year"),
-    YESTERDAY("yesterday","yesterday"),
+    THIS_YEAR("this-year", "this year"),
+    YESTERDAY("yesterday", "yesterday"),
     LAST_MONTH("last-month", "last month"),
-    LAST_YEAR ("last-year", "last year");
+    LAST_YEAR("last-year", "last year");
 
     public final String displayName;
     public final String text;

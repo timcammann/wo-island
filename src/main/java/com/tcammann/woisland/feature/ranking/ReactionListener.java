@@ -1,7 +1,8 @@
-package com.tcammann.woisland.service;
+package com.tcammann.woisland.feature.ranking;
 
-import com.tcammann.woisland.model.ReactionEventEntity;
-import com.tcammann.woisland.repository.ReactionEventRepository;
+import com.tcammann.woisland.feature.Listener;
+import com.tcammann.woisland.feature.ranking.model.ReactionEventEntity;
+import com.tcammann.woisland.feature.ranking.repository.ReactionEventRepository;
 import com.tcammann.woisland.util.ReactionUtils;
 import discord4j.core.event.domain.message.ReactionAddEvent;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +27,7 @@ public class ReactionListener implements Listener<ReactionAddEvent> {
         this.reactionEventRepository = reactionEventRepository;
         var customEmojiCodePoints = ReactionUtils.emojiNamesAsCodePoints(customEmojiNames);
         this.trackedEmojis = Stream.concat(customEmojiCodePoints.stream(), utfEmojiCodePoints.stream()).toList();
-        LOG.info("Starting {}.", this.getClass().getSimpleName());
+        LOG.info("Initializing {}.", this.getClass().getSimpleName());
     }
 
     @Override
@@ -41,7 +42,8 @@ public class ReactionListener implements Listener<ReactionAddEvent> {
             return Mono.empty();
         }
         if (event.getMessageAuthorId().asLong() == ReactionUtils.readMemberId(event)) {
-            LOG.trace("Discarding reaction event. Reaction to user's own message. Emoji codepoint(s): {}", ReactionUtils.readEmojiAsCodePoints(event).orElse(null));
+            LOG.trace("Discarding reaction event. Reaction to user's own message. Emoji codepoint(s): {}",
+                    ReactionUtils.readEmojiAsCodePoints(event).orElse(null));
             return Mono.empty();
         }
 

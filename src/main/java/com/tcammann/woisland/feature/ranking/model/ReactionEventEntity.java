@@ -1,6 +1,13 @@
-package com.tcammann.woisland.model;
+package com.tcammann.woisland.feature.ranking.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 import java.util.Date;
 
@@ -61,13 +68,13 @@ public class ReactionEventEntity {
     @Override
     public String toString() {
         return "ReactionEventEntity{" +
-                "id=" + id +
-                ", server=" + server +
-                ", message=" + message +
-                ", messageAuthor=" + messageAuthor +
-                ", member=" + member +
-                ", emoji='" + emoji + '\'' +
-                ", timestamp=" + timestamp +
-                '}';
+               "id=" + id +
+               ", server=" + server +
+               ", message=" + message +
+               ", messageAuthor=" + messageAuthor +
+               ", member=" + member +
+               ", emoji='" + emoji + '\'' +
+               ", timestamp=" + timestamp +
+               '}';
     }
 }

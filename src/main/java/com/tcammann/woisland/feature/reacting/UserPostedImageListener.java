@@ -1,5 +1,6 @@
-package com.tcammann.woisland.service;
+package com.tcammann.woisland.feature.reacting;
 
+import com.tcammann.woisland.feature.Listener;
 import com.tcammann.woisland.util.MessageUtils;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.message.MessageCreateEvent;
@@ -22,7 +23,6 @@ public class UserPostedImageListener implements Listener<MessageCreateEvent> {
     private final List<String> usernamesToReactTo;
     private final Emoji reactionEmoji;
 
-
     public UserPostedImageListener(
             @Value("${events.user-posted-image.emoji.id}") final String reactionEmojiId,
             @Value("${events.user-posted-image.emoji.name}") final String reactionEmojiName,
@@ -32,7 +32,7 @@ public class UserPostedImageListener implements Listener<MessageCreateEvent> {
         this.usernamesToReactTo = usernamesToReactTo;
         this.monitoredChannels = monitoredChannels;
         this.reactionEmoji = Emoji.custom(Snowflake.of(Id.of(reactionEmojiId)), reactionEmojiName, false);
-        LOG.info("Starting {} for user names {}.", this.getClass().getSimpleName(), usernamesToReactTo);
+        LOG.info("Initializing {} for user names {}.", this.getClass().getSimpleName(), usernamesToReactTo);
     }
 
     @Override

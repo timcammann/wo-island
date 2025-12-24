@@ -1,9 +1,10 @@
-package com.tcammann.woisland.service;
+package com.tcammann.woisland.feature.ranking;
 
-import com.tcammann.woisland.model.RankedMember;
-import com.tcammann.woisland.model.Ranking;
-import com.tcammann.woisland.model.TimeframeOption;
-import com.tcammann.woisland.repository.ReactionEventRepository;
+import com.tcammann.woisland.feature.Listener;
+import com.tcammann.woisland.feature.ranking.model.RankedMember;
+import com.tcammann.woisland.feature.ranking.model.Ranking;
+import com.tcammann.woisland.feature.ranking.model.TimeframeOption;
+import com.tcammann.woisland.feature.ranking.repository.ReactionEventRepository;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -21,7 +22,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
-public class RankingCommandListener implements Listener<ChatInputInteractionEvent> {
+public class CommandListener implements Listener<ChatInputInteractionEvent> {
     private final ReactionEventRepository reactionEventRepository;
     private final String commandName;
     private final String headingTemplate;
@@ -29,7 +30,7 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
     private final Integer pageSize;
     private final GatewayDiscordClient gatewayDiscordClient;
 
-    public RankingCommandListener(
+    public CommandListener(
             ReactionEventRepository reactionEventRepository,
             @Value("${events.reaction.ranking.command-name}") String commandName,
             @Value("${events.reaction.ranking.result.page-size}") Integer pageSize,
@@ -42,7 +43,34 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
         this.resultLineTemplate = resultLineTemplate;
         this.pageSize = pageSize;
         this.gatewayDiscordClient = gatewayDiscordClient;
-        LOG.info("Starting {}.", this.getClass().getSimpleName());
+        LOG.info("Initializing {}.", this.getClass().getSimpleName());
+    }
+
+    private static StartAndEndDate calculateStartAndEndDate(TimeframeOption timeframe, LocalDate now) {
+        final var aMonthAgo = now.minusMonths(1);
+        final var aYearAgo = now.minusYears(1);
+
+        var theFirstDay = switch (timeframe) {
+            case TODAY -> now;
+            case THIS_MONTH -> now.withDayOfMonth(1);
+            case THIS_YEAR -> now.withDayOfYear(1);
+            case YESTERDAY -> now.minusDays(1);
+            case LAST_MONTH -> aMonthAgo.withDayOfMonth(1);
+            case LAST_YEAR -> aYearAgo.withDayOfYear(1);
+        };
+        var startOfFirstDay = Date.from(theFirstDay.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+
+        var theDayAfter = switch (timeframe) {
+            case TODAY -> now.plusDays(1);
+            case THIS_MONTH -> now.plusMonths(1).withDayOfMonth(1);
+            case THIS_YEAR -> now.plusYears(1).withDayOfYear(1);
+            case YESTERDAY -> now;
+            case LAST_MONTH -> now.withDayOfMonth(1);
+            case LAST_YEAR -> now.withDayOfYear(1);
+        };
+        var endOfLastDay = Date.from(theDayAfter.atStartOfDay().minusNanos(1).atZone(ZoneId.systemDefault()).toInstant());
+
+        return new StartAndEndDate(startOfFirstDay, endOfLastDay);
     }
 
     @Override
@@ -61,7 +89,7 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
         StartAndEndDate startAndEndDate;
         try {
             timeframe = event.getOptionAsString("timeframe")
-                    .map( option -> TimeframeOption.valueOf(option.trim().toUpperCase()))
+                    .map(option -> TimeframeOption.valueOf(option.trim().toUpperCase()))
                     .orElse(TimeframeOption.THIS_MONTH);
             startAndEndDate = calculateStartAndEndDate(timeframe, LocalDate.now());
         } catch (IllegalArgumentException e) {
@@ -73,33 +101,6 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
                 .flatMap(rankings -> fetchMembers(rankings, server))
                 .map(rankings -> buildReply(rankings, timeframe))
                 .flatMap(response -> event.reply().withContent(response));
-    }
-
-    private static StartAndEndDate calculateStartAndEndDate(TimeframeOption timeframe, LocalDate now) {
-        final var aMonthAgo = now.minusMonths(1);
-        final var aYearAgo = now.minusYears(1);
-
-        var theFirstDay = switch (timeframe){
-            case TODAY -> now;
-            case THIS_MONTH -> now.withDayOfMonth(1);
-            case THIS_YEAR -> now.withDayOfYear(1);
-            case YESTERDAY -> now.minusDays(1);
-            case LAST_MONTH -> aMonthAgo.withDayOfMonth(1);
-            case LAST_YEAR -> aYearAgo.withDayOfYear(1);
-        };
-        var startOfFirstDay =  Date.from(theFirstDay.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
-
-        var theDayAfter = switch (timeframe){
-            case TODAY-> now.plusDays(1);
-            case THIS_MONTH -> now.plusMonths(1).withDayOfMonth(1);
-            case THIS_YEAR -> now.plusYears(1).withDayOfYear(1);
-            case YESTERDAY -> now;
-            case LAST_MONTH -> now.withDayOfMonth(1);
-            case LAST_YEAR -> now.withDayOfYear(1);
-        };
-        var endOfLastDay =  Date.from(theDayAfter.atStartOfDay().minusNanos(1).atZone(ZoneId.systemDefault()).toInstant());
-
-        return new StartAndEndDate(startOfFirstDay, endOfLastDay);
     }
 
     private Mono<List<Ranking>> fetchRankings(Long server, StartAndEndDate startAndEndDate) {
@@ -128,7 +129,7 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
         var lineTemplate = resultLineTemplate + "\n";
 
         var sb = new StringBuilder().append(heading);
-        if (rankedMembers.isEmpty()){
+        if (rankedMembers.isEmpty()) {
             sb.append("nobody :'(\n");
         } else {
             for (var rankedMember : rankedMembers) {
@@ -138,7 +139,8 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
         return sb.toString();
     }
 
-    private record StartAndEndDate(Date start, Date end){}
+    private record StartAndEndDate(Date start, Date end) {
+    }
 }
 
 

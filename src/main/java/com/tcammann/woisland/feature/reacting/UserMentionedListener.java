@@ -1,5 +1,6 @@
-package com.tcammann.woisland.service;
+package com.tcammann.woisland.feature.reacting;
 
+import com.tcammann.woisland.feature.Listener;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.emoji.Emoji;
 import discord4j.core.object.entity.Message;
@@ -22,7 +23,7 @@ public class UserMentionedListener implements Listener<MessageCreateEvent> {
             @Value("#{${events.user-mentioned.user-names}}") final List<String> usernamesToReactTo) {
         this.reactionEmojiCodepoints = reactionEmojiCodepoints;
         this.usernamesToReactTo = usernamesToReactTo;
-        LOG.info("Starting {} for user names {}.", this.getClass().getSimpleName(), usernamesToReactTo);
+        LOG.info("Initializing {} for user names {}.", this.getClass().getSimpleName(), usernamesToReactTo);
     }
 
     @Override

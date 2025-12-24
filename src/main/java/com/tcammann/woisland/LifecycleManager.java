@@ -1,7 +1,7 @@
-package com.tcammann.woisland.service;
+package com.tcammann.woisland;
 
-
-import com.tcammann.woisland.model.TimeframeOption;
+import com.tcammann.woisland.feature.Listener;
+import com.tcammann.woisland.feature.ranking.model.TimeframeOption;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.Event;
 import discord4j.core.object.command.ApplicationCommandOption;
@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Service
-public class InitService<T extends Event> {
+public class LifecycleManager<T extends Event> {
     final GatewayDiscordClient gatewayDiscordClient;
     final List<Listener<T>> listeners;
     final String reactionRankingCommandName;
@@ -30,10 +30,9 @@ public class InitService<T extends Event> {
     final List<RegisteredCommand> registeredCommands = new ArrayList<>();
     final long applicationId;
     private final List<Long> reactionRankingServerIds;
-    Logger LOG = LoggerFactory.getLogger(InitService.class);
+    Logger LOG = LoggerFactory.getLogger(LifecycleManager.class);
 
-
-    public InitService(
+    public LifecycleManager(
             @Value("#{${events.reaction.ranking.server-ids}}") List<Long> reactionRankingServerIds,
             GatewayDiscordClient gatewayDiscordClient,
             List<Listener<T>> listeners,
@@ -57,7 +56,8 @@ public class InitService<T extends Event> {
                 .flatMap(listener -> gatewayDiscordClient.on(listener.getEventType())
                         .flatMap(event -> listener.execute(event)
                                 .onErrorResume(listener::handleError))
-                        .doOnSubscribe(subscription -> LOG.info("{} subscribed to {}", listener.getClass().getSimpleName(), listener.getEventType().getSimpleName()))
+                        .doOnSubscribe(
+                                subscription -> LOG.info("{} subscribed to {}", listener.getClass().getSimpleName(), listener.getEventType().getSimpleName()))
                         .doOnComplete(() -> LOG.warn("{} terminated!", listener.getClass().getSimpleName())))
                 .subscribe();
 
