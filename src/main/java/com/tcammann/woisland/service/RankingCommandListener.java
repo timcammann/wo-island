@@ -58,37 +58,54 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
         }
 
         TimeframeOption timeframe;
-        Date after;
+        StartAndEndDate startAndEndDate;
         try {
             timeframe = event.getOptionAsString("timeframe")
                     .map( option -> TimeframeOption.valueOf(option.trim().toUpperCase()))
                     .orElse(TimeframeOption.THIS_MONTH);
-            after = calculateTimestampCutoff(timeframe);
+            startAndEndDate = calculateStartAndEndDate(timeframe, LocalDate.now());
         } catch (IllegalArgumentException e) {
             return event.reply().withContent("Timeframe not supported.");
         }
 
         var server = event.getInteraction().getGuildId().orElseThrow().asLong();
-        return fetchRankings(server, after)
+        return fetchRankings(server, startAndEndDate)
                 .flatMap(rankings -> fetchMembers(rankings, server))
                 .map(rankings -> buildReply(rankings, timeframe))
                 .flatMap(response -> event.reply().withContent(response));
     }
 
-    private static Date calculateTimestampCutoff(TimeframeOption timeframe) {
-        LocalDate now = LocalDate.now();
-        LocalDate firstDayOfPeriod = switch (timeframe){
+    private static StartAndEndDate calculateStartAndEndDate(TimeframeOption timeframe, LocalDate now) {
+        final var aMonthAgo = now.minusMonths(1);
+        final var aYearAgo = now.minusYears(1);
+
+        var theFirstDay = switch (timeframe){
             case TODAY -> now;
             case THIS_MONTH -> now.withDayOfMonth(1);
             case THIS_YEAR -> now.withDayOfYear(1);
+            case YESTERDAY -> now.minusDays(1);
+            case LAST_MONTH -> aMonthAgo.withDayOfMonth(1);
+            case LAST_YEAR -> aYearAgo.withDayOfYear(1);
         };
-        return Date.from(firstDayOfPeriod.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+        var startOfFirstDay =  Date.from(theFirstDay.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+
+        var theDayAfter = switch (timeframe){
+            case TODAY-> now.plusDays(1);
+            case THIS_MONTH -> now.plusMonths(1).withDayOfMonth(1);
+            case THIS_YEAR -> now.plusYears(1).withDayOfYear(1);
+            case YESTERDAY -> now;
+            case LAST_MONTH -> now.withDayOfMonth(1);
+            case LAST_YEAR -> now.withDayOfYear(1);
+        };
+        var endOfLastDay =  Date.from(theDayAfter.atStartOfDay().minusNanos(1).atZone(ZoneId.systemDefault()).toInstant());
+
+        return new StartAndEndDate(startOfFirstDay, endOfLastDay);
     }
 
-    private Mono<List<Ranking>> fetchRankings(Long server, Date after) {
+    private Mono<List<Ranking>> fetchRankings(Long server, StartAndEndDate startAndEndDate) {
         var before = System.nanoTime();
         return Mono.fromCallable(() -> {
-                    var rankings = reactionEventRepository.findTopXByServer(server, after, Pageable.ofSize(pageSize)).getContent();
+                    var rankings = reactionEventRepository.findTopXByServer(server, startAndEndDate.start, startAndEndDate.end, Pageable.ofSize(pageSize)).getContent();
                     for (int i = 0; i < rankings.size(); i++) {
                         rankings.get(i).setRank(i + 1);
                     }
@@ -120,6 +137,8 @@ public class RankingCommandListener implements Listener<ChatInputInteractionEven
         }
         return sb.toString();
     }
+
+    private record StartAndEndDate(Date start, Date end){}
 }
 
 

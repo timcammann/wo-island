@@ -14,9 +14,9 @@ public interface ReactionEventRepository extends JpaRepository<ReactionEventEnti
     @Query("select new com.tcammann.woisland.model.Ranking(r.messageAuthor, count(r.messageAuthor)) " +
             "from ReactionEventEntity r " +
             "where r.server = :server " +
-            "and r.timestamp > :after " +
+            "and r.timestamp between :start and :end " +
             "group by r.messageAuthor " +
             "order by count(r.messageAuthor) desc")
-    Page<Ranking> findTopXByServer(Long server, Date after, Pageable pageable);
+    Page<Ranking> findTopXByServer(Long server, Date start, Date end, Pageable pageable);
 
 }
